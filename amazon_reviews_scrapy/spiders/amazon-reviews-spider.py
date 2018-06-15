@@ -7,7 +7,8 @@ class AmazonReviewsSpider(scrapy.Spider):
 
     def __init__(self, product_id=None, *args, **kwargs):
         super(AmazonReviewsSpider, self).__init__(*args, **kwargs)
-
+        
+        self.product_id = product_id
         if not product_id:
             raise Exception("product_id is required")
 
@@ -25,6 +26,7 @@ class AmazonReviewsSpider(scrapy.Spider):
     def extract_reviews(self, response):
         for review in response.css('div[data-hook=review]'):
             yield {
+                'product_id': self.product_id,
                 'id': review.xpath('@id').extract_first(),
                 'stars': self.extract_stars(review),
                 'title': review.css('a.review-title::text').extract_first(),
