@@ -2,7 +2,8 @@ from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import scrapy
 import urllib.parse
-
+import requests
+import json
 
 class AmazonReviewsSpider(scrapy.Spider):
     name = 'amazon-reviews-spider'
@@ -18,11 +19,21 @@ class AmazonReviewsSpider(scrapy.Spider):
                            product_id +
                            '/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&showViewpoints=1&pageNumber=1&reviewerType=all_reviews']
         
-        dispatcher.connect(self.spider_closed, signals.spider_closed)
+        dispatcher.connect(self._item_passed, signals.item_passed)
 
-    def spider_closed(self, spider):
-        spider.logger.info('*****Spider closed****: %s', spider.name)
-    
+    def _item_passed(self,item):
+        url = "http://localhost:5000/products/"+self.product_id+"/reviews"
+        payload = json.dumps(item) 
+
+        headers = {
+            'content-type': "application/json",
+            'cache-control': "no-cache",
+        }
+
+        response = requests.request("POST", url, data=payload, headers=headers)
+
+        print(response.text)
+
     def parse(self, response):
         yield from self.extract_pages(response)
         yield from self.extract_reviews(response)
