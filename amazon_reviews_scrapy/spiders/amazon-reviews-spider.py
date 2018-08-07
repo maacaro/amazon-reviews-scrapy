@@ -8,21 +8,21 @@ import json
 class AmazonReviewsSpider(scrapy.Spider):
     name = 'amazon-reviews-spider'
 
-    def __init__(self, product_id=None, *args, **kwargs):
+    def __init__(self, asin=None, *args, **kwargs):
         super(AmazonReviewsSpider, self).__init__(*args, **kwargs)
         
-        self.product_id = product_id
-        if not product_id:
-            raise Exception("product_id is required")
+        self.asin = asin
+        if not asin:
+            raise Exception("asin is required")
 
         self.start_urls = ['https://www.amazon.com/product-reviews/' +
-                           product_id +
+                           asin +
                            '/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&showViewpoints=1&pageNumber=1&reviewerType=all_reviews']
         
         dispatcher.connect(self._item_passed, signals.item_passed)
 
     def _item_passed(self,item):
-        url = "http://localhost:5000/products/"+self.product_id+"/reviews"
+        url = "http://localhost:5000/products/"+self.asin+"/reviews"
         payload = json.dumps(item) 
 
         headers = {
@@ -44,7 +44,7 @@ class AmazonReviewsSpider(scrapy.Spider):
     def extract_reviews(self, response):
         for review in response.css('div[data-hook=review]'):
             yield {
-                'product_id': self.product_id,
+                'asin': self.asin,
                 'id': review.xpath('@id').extract_first(),
                 'stars': self.extract_stars(review),
                 'title': review.css('a.review-title::text').extract_first(),
