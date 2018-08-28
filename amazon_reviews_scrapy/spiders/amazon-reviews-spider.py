@@ -21,7 +21,7 @@ class AmazonReviewsSpider(scrapy.Spider):
         
         dispatcher.connect(self._item_passed, signals.item_passed)
 
-     def _item_passed(self,item):
+    def _item_passed(self,item):
          url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin+"/reviews"
          payload = json.dumps(item) 
 
