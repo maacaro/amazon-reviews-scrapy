@@ -3,6 +3,7 @@ import scrapy
 import urllib.parse
 import requests
 import json
+from scrapy.xlib.pydispatch import dispatcher
 
 class AmazonReviewsSpider(scrapy.Spider):
     name = 'amazon-reviews-spider'
@@ -18,6 +19,21 @@ class AmazonReviewsSpider(scrapy.Spider):
                            asin +
                            '/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&showViewpoints=1&pageNumber=1&reviewerType=all_reviews']
         
+        dispatcher.connect(self._item_passed, signals.item_passed)
+
+     def _item_passed(self,item):
+         url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin+"/reviews"
+         payload = json.dumps(item) 
+
+         headers = {
+             'content-type': "application/json",
+             'cache-control': "no-cache",
+         }
+
+         response = requests.request("POST", url, data=payload, headers=headers)
+
+         print(response.text)
+
     def parse(self, response):
         yield from self.extract_pages(response)
         yield from self.extract_reviews(response)
