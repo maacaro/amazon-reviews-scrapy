@@ -20,6 +20,7 @@ class AmazonReviewsSpider(scrapy.Spider):
                            '/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&showViewpoints=1&pageNumber=1&reviewerType=all_reviews']
         
         dispatcher.connect(self._item_passed, signals.item_passed)
+        dispatcher.connect(self._spider_closed, signals.spider_closed)
 
     def _item_passed(self,item):
          url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin+"/reviews"
@@ -34,12 +35,29 @@ class AmazonReviewsSpider(scrapy.Spider):
 
          print(response.text)
 
+    def _spider_closed(self):
+        url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin
+        payload = json.dumps({productName: self.productName})
+
+        headers = {
+             'content-type': "application/json",
+             'cache-control': "no-cache",
+         }
+        
+        response = requests.request("PUT", url, data=payload, headers=headers)
+        
+        print("***********Product Name:"+self.productName)
+
     def parse(self, response):
+        self.extract_product_name(response)
         yield from self.extract_pages(response)
         yield from self.extract_reviews(response)
 
     def parse_reviews(self, response):
         yield from self.extract_reviews(response)
+    
+    def extract_product_name(self,response):
+        self.productName = response.css('div[class = "a-row product-title"] h1 a::text').extract_first()
 
     def extract_reviews(self, response):
         for review in response.css('div[data-hook=review]'):
