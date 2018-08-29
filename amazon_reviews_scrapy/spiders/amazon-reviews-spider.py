@@ -37,7 +37,7 @@ class AmazonReviewsSpider(scrapy.Spider):
 
     def _spider_closed(self):
         url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin
-        payload = json.dumps({productName: self.productName})
+        payload = json.dumps({name: self.productName})
 
         headers = {
              'content-type': "application/json",
