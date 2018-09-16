@@ -19,9 +19,26 @@ class AmazonReviewsSpider(scrapy.Spider):
                            asin +
                            '/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&showViewpoints=1&pageNumber=1&reviewerType=all_reviews']
         
+        dispatcher.connect(self._spider_opened, signals.spider_opened)
         dispatcher.connect(self._item_passed, signals.item_passed)
         dispatcher.connect(self._spider_closed, signals.spider_closed)
 
+    def _spider_opened(self):
+        url = "https://maacaro-analytics-api.herokuapp.com/products"
+        payload = json.dumps({
+            'asin': self.asin
+            })
+
+        headers = {
+             'content-type': "application/json",
+             'cache-control': "no-cache",
+         }
+        
+        response = requests.request("POST", url, data=payload, headers=headers)
+        
+        print("***********Product ASIN:"+self.asin)
+
+    
     def _item_passed(self,item):
          url = "https://maacaro-analytics-api.herokuapp.com/products/"+self.asin+"/reviews"
          payload = json.dumps(item) 
